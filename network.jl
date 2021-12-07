@@ -37,6 +37,9 @@ mutable struct Network
             self.voltage .= self.weights * self.output + self.voltage
             self.output .=  (self.voltage .>= self.threshold) .* ((t .- self.fire_rec) .> self.refractory)
 
+            # reset voltage after firing
+            self.voltage[[i for i in 1:self.num_neurons if self.output[i] == 1]] = 0
+
             # update the fire records
             self.fire_rec[[i for i in 1:self.num_neurons if self.output[i] == 1]] = t
 
