@@ -34,8 +34,8 @@ mutable struct Network
 
     function activate(self::Network)
         for t in 1:self.runtime
-            self.voltage .= self.weights * self.output + self.voltage
-            self.output .=  (self.voltage .>= self.threshold) .* ((t .- self.fire_rec) .> self.refractory)
+            self.voltage .= self.weights * self.output .* ((t .- self.fire_rec) .> self.refractory) + self.voltage
+            self.output .=  self.voltage .>= self.threshold
 
             # reset voltage after firing
             self.voltage[[i for i in 1:self.num_neurons if self.output[i] == 1]] = 0
