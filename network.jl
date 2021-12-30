@@ -37,7 +37,7 @@ mutable struct Network
     end
 
     # θ : threshold, r : refractory
-    function activate(self::Network, spike_train::Array{Bool}; θ, r, η, γᵥ, γₚ, γₘ, A₊, A₋)
+    function activate(self::Network, spike_train::Array{Bool}; θ, r, η, γᵥ, γₚ, γₘ, A₊, A₋, w₊, w₋)
         for t in 1:self.runtime
             # load input data
             self.output[1:self.input_size, 1] .= spike_train[:,t]
@@ -52,14 +52,20 @@ mutable struct Network
             self.voltage -= (self.voltage .>= θ) .* self.voltage
 
             # update pre-synaptic trace
+            self.Pᵢ .*= γₚ
             for i in 1:self.hidden_neurons+self.output_size
                 if t-self.fire_rec[i,1] > r 
                     self.Pᵢ[i,:] .+= self.output[:,1] .* (self.weights[i,:] .!= 0.0f0) * A₊
+                    self.weights[i,:] .+= η * self.output[:,1] .* (self.weights[i,:] .!= 0.0f0) * self.M[i,1] * (w₋ .- self.weights[i,:])
                 end
             end
 
+            self.voltage .*= γᵥ
             self.voltage .= self.weights * self.output .* ((t .- self.fire_rec) .> r) + self.voltage
             self.output[self.input_size+1:end, 1] .= self.voltage[1:self.hidden_neurons, 1] .>= θ
+            for i in axes(weights, 1) 
+                self.weights[i,:] .+= η * self.input[i,1] .* (self.weights[i,:] .!= 0.0f0) .* self.Pᵢ[i,:] * (w₊ .- self.weights[i,:])
+            end
 
             # update post-synaptic trace
             self.M .*= γₘ
