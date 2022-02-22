@@ -64,7 +64,7 @@ mutable struct Network
             self.voltage .= self.weights * self.output .* ((t .- self.fire_rec) .> r) + self.voltage
             self.output[self.input_size+1:end, 1] .= self.voltage[1:self.hidden_neurons, 1] .>= θ
             for i in axes(weights, 1) 
-                self.weights[i,:] .+= η * self.input[i,1] .* (self.weights[i,:] .!= 0.0f0) .* self.Pᵢ[i,:] * (w₊ .- self.weights[i,:])
+                self.weights[i,:] .+= η * self.output[i,1] .* (self.weights[i,:] .!= 0.0f0) .* self.Pᵢ[i,:] * (w₊ .- self.weights[i,:])
             end
 
             # update post-synaptic trace
